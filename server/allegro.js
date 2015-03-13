@@ -11,7 +11,6 @@ function getToken(cb) {
             console.log('Error:', result.message);
             this.retry(2000); // try again after 2 sec
         } else {
-            console.log(result);
             cb(result.access_token);
         }
     });
@@ -30,12 +29,23 @@ function getAuctions(cb) {
                 console.log('Error:', result.message);
                 this.retry(2000); // try again after 2 sec
             } else {
-                console.log(data);
-                cb();
+                var to_send = {auctions: []};
+                for (var i=0; i < data.bargains.length; i++){
+                    var a = data.bargains[i];
+                    console.log(a);
+                    to_send.auctions[i] = {
+                        title: a.name,
+                        image: a.image.large
+                    };
+                }
+                cb(to_send);
             }
         });
     })
 }
 
-getAuctions(function () {
+module.exports.getAuctions = getAuctions;
+
+getAuctions(function (a) {
+    console.log(a);
 });

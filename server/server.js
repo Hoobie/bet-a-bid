@@ -4,11 +4,10 @@
  **/
 
 var config = require("./config.json"),
-    io = require("socket.io")(config.port);
+    io = require("socket.io")(config.port),
+    allegro = require("./allegro.js");
 
-var users = [];
-
-var state = 0;
+var users = [], results = [], state = 0;
 
 console.log("Server started");
 
@@ -20,11 +19,9 @@ io.on('connection', function (socket) {
         console.log(username);
         if (state == 0) {
             users[0] = {username: username, socket: socket};
-            socket.emit("user", 0);
             state = 1;
         } else if (state == 1) {
             users[1] = {username: username, socket: socket};
-            socket.emit("user", 1);
             state = 2;
             downloadAuctions();
         } else {
@@ -38,12 +35,12 @@ io.on('connection', function (socket) {
             socket.close();
             return;
         }
-        users[data.user].results = data.result;
-        if(state == 3)
+        results.push(data.result);
+        if (state == 3)
             state = 4;
         else {
-            var match = ~(users[0].results ^ users[1].results) & 0x07;
-            for(var i=0; i<2; i++){
+            var match = ~(results[0] ^ results[1]) & 0x07;
+            for (var i = 0; i < 2; i++) {
                 users[i].socket.emit("matches", match > 0);
                 users[i].socket.close();
             }
@@ -53,9 +50,10 @@ io.on('connection', function (socket) {
     });
 });
 
-function downloadAuctions(){
-    var auctions = {};
-    for(var i=0; i<2; i++){
-        users[i].socket.emit("auctions", auctions);
-    }
+function downloadAuctions() {
+    allegro.getAuctions(function (data) {
+        for (var i = 0; i < 2; i++) {
+            users[i].socket.emit("paired", data);
+        }
+    });
 }

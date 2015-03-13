@@ -32,7 +32,6 @@ function getAuctions(cb) {
                 var to_send = {auctions: []};
                 for (var i=0; i < data.bargains.length; i++){
                     var a = data.bargains[i];
-                    console.log(a);
                     to_send.auctions[i] = {
                         title: a.name,
                         image: a.image.large
@@ -46,6 +45,6 @@ function getAuctions(cb) {
 
 module.exports.getAuctions = getAuctions;
 
-getAuctions(function (a) {
-    console.log(a);
-});
+//getAuctions(function (a) {
+//    console.log(a);
+//});

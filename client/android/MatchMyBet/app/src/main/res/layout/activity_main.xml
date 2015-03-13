@@ -13,19 +13,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/nick"
+        android:layout_marginTop="53dp"
         android:layout_below="@+id/textView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="54dp" />
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Start!"
         android:id="@+id/button"
-        android:layout_below="@+id/editText"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="62dp"
         android:clickable="true"
-        android:onClick="findPair" />
+        android:onClick="findPair"
+        android:layout_below="@+id/nick"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="45dp" />
 
 </RelativeLayout>

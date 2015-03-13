@@ -22,8 +22,10 @@ public class MainActivity extends Activity {
     private Socket mSocket;
     {
         try {
-            mSocket = IO.socket("http://chat.socket.io");
-        } catch (URISyntaxException e) {}
+            mSocket = IO.socket("http://localhost:6666");
+        } catch (URISyntaxException e) {
+
+        }
     }
 
     @Override
@@ -33,63 +35,42 @@ public class MainActivity extends Activity {
         mSocket.connect();
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     public void findPair(View view) {
-        EditText editText = (EditText) findViewById(R.id.nick);
-        String nick = editText.getText().toString();
+        EditText nickInput = (EditText) findViewById(R.id.nick);
+        String nick = nickInput.getText().toString();
 
         if (TextUtils.isEmpty(nick)) {
             return;
         }
 
-        mSocket.emit("pair_requested", nick);
-
+        mSocket.emit("join", nick);
         mSocket.on("paired", onPaired);
-
-
     }
-    private Emitter.Listener onNewMessage = new Emitter.Listener() {
+
+    private Emitter.Listener onPaired = new Emitter.Listener() {
         @Override
-        public void call(final Object.. args) {
-            getActivity().runOnUiThread(new Runnable() {
+        public void call(final Object... args) {
+            MainActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     JSONObject data = (JSONObject) args[0];
-                    String username;
                     String message;
                     try {
-                        username = data.getString("username");
                         message = data.getString("message");
                     } catch (JSONException e) {
                         return;
                     }
 
                     // add the message to view
-                    addMessage(username, message);
+                    addMessage(message);
                 }
             });
         }
     };
+
+    private void addMessage(String message) {
+        EditText nickInput = (EditText) findViewById(R.id.nick);
+        nickInput.setText(message);
+        mSocket.off("paired");
+    }
 }

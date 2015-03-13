@@ -1,0 +1,9 @@
+{
+  "author": "Random Next Name",
+  "version": "0.0.1",
+  "name": "bet-a-bid-server",
+  "description": "A simple server for Bet a Bid App",
+  "dependencies": {
+    "socket.io": "1.3.5"
+  }
+}

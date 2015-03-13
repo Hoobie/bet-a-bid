@@ -39,12 +39,13 @@ io.on('connection', function (socket) {
         if (state == 3)
             state = 4;
         else {
-            var match = ~(results[0] ^ results[1]) & 0x07;
+            var match = ~(results[0] ^ results[1]) & 0x31;
             for (var i = 0; i < 2; i++) {
                 users[i].socket.emit("matches", match > 0);
                 users[i].socket.close();
             }
             users = [];
+            results = [];
             state = 0;
         }
     });

@@ -2,8 +2,10 @@
   "port": 6666,
   "apis": {
     "allegro": {
-      "endpoint": "http://hotn.eu/mobius/",
+      "oauth": "https://api.natelefon.pl/oauth/token?grant_type=client_credentials",
+      "endpoint": "https://api.natelefon.pl/",
       "userLogin": "",
+      "pass": "",
       "hashPass": ""
     }
   }

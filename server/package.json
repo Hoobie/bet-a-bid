@@ -4,6 +4,7 @@
   "name": "match-my-bet-server",
   "description": "A simple server",
   "dependencies": {
-    "socket.io": "1.3.5"
+    "socket.io": "1.3.5",
+    "restler": "2.5.1"
   }
 }

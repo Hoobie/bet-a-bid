@@ -19,12 +19,11 @@ function getToken(cb) {
 
 function getAuctions(cb) {
     getToken(function (token) {
-        console.log(token);
         rest.get(config.apis.allegro.endpoint + "v1/allegro/bargains", {
             query: {
                 access_token: token,
-                limit: 3,
-                dailyOffers: true
+                limit: 5,
+                dailyOffers: false
             }
         }).on('complete', function (data, result) {
             if (result instanceof Error) {

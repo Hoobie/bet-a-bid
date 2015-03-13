@@ -3,6 +3,7 @@
  * @version: 0.0.1
  **/
 
-var io = require("socket.io");
+var config = require("./config.json"),
+    io = require("socket.io")(config.port);
 
 console.log("Bangla");

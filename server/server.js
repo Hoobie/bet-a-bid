@@ -42,11 +42,13 @@ io.on('connection', function (socket) {
         if(state == 3)
             state = 4;
         else {
-            state = 5;
-            var match = ~(users[0].results ^ users[1].results);
+            var match = ~(users[0].results ^ users[1].results) & 0x07;
             for(var i=0; i<2; i++){
-                users[i].socket.emit("matches", true);
+                users[i].socket.emit("matches", match > 0);
+                users[i].socket.close();
             }
+            users = [];
+            state = 0;
         }
     });
 });

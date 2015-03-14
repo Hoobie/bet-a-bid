@@ -7,21 +7,25 @@ var config = require("./config.json"),
     io = require("socket.io")(config.port),
     allegro = require("./allegro.js");
 
-var users = [], results = [], state = 0;
+var users = [], results = [], usernames = [], images = [], state = 0;
 
 console.log("Server started");
 
 io.on('connection', function (socket) {
     var username = "";
-    socket.emit("troll", {troll: true});
+
     socket.on("join", function (data) {
-        username = data;
-        console.log(username);
+        username = data.name || "Guest";
+        var image = data.image || "";
+        console.log(username + " joined the server");
+        usernames.push(username);
+        images.push(image);
         if (state == 0) {
-            users[0] = {username: username, socket: socket};
+            users.push(socket);
             state = 1;
+            //downloadAuctions();
         } else if (state == 1) {
-            users[1] = {username: username, socket: socket};
+            users.push(socket);
             state = 2;
             downloadAuctions();
         } else {
@@ -29,23 +33,52 @@ io.on('connection', function (socket) {
             socket.close();
         }
     });
+
     socket.on("results", function (data) {
         if (state != 3 && state != 4) {
             console.log("error");
             socket.close();
             return;
         }
-        results.push(data.result);
+        results.push(data);
         if (state == 3)
             state = 4;
         else {
-            var match = ~(results[0] ^ results[1]) & 0x31;
-            for (var i = 0; i < 2; i++) {
-                users[i].socket.emit("matches", match > 0);
-                users[i].socket.close();
+            var match = ~(results[0] ^ results[1]) & (Math.pow(config.auctions) - 1);
+        //var match = 2;
+            for (var i = 0; i < users.length; i++) {
+                if(match > 0) {
+                    users[i].emit("finish", {
+                        matched: true,
+                        username: usernames[1-i],
+                        image: images[1-i]
+                    });
+                } else {
+                    users[i].emit("finish", {matched: false});
+                }
             }
             users = [];
             results = [];
+            images = [];
+            usernames = [];
+            state = 0;
+        }
+    });
+
+    socket.on('disconnect', function (data) {
+        //socket.emit('disconnected');
+        console.log(username + " disconnected");
+        var i = users.indexOf(socket), j = 0;
+        delete users[i];
+        var tab = [];
+        for (i = 0; i < users.length; i++) {
+            if (users[i] === undefined) continue;
+            tab[j++] = users[i];
+        }
+        users = tab;
+        if (state > 1) {
+            state = 1;
+        } else {
             state = 0;
         }
     });
@@ -53,8 +86,9 @@ io.on('connection', function (socket) {
 
 function downloadAuctions() {
     allegro.getAuctions(function (data) {
-        for (var i = 0; i < 2; i++) {
-            users[i].socket.emit("paired", data);
+        for (var i = 0; i < users.length; i++) {
+            users[i].emit("paired", data);
         }
+        state = 3;
     });
 }

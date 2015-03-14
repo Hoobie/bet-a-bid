@@ -55,7 +55,6 @@ public class JudgeAuctionsActivity extends FragmentActivity {
      */
     private PagerAdapter mPagerAdapter;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +63,11 @@ public class JudgeAuctionsActivity extends FragmentActivity {
         nick = i.getStringExtra(MainActivity.EXTRA_NICK);
         mSocket.connect();
         mSocket.on("paired", onPaired);
-        mSocket.emit("join", "{ \"name\" : \"" + nick + "\", \"image\" : \"http://www.digibuzzme.com/wp-content/uploads/2012/11/error-404-road-not-found.jpg\" }");
+        try {
+            mSocket.emit("join", new JSONObject("{ name : \"" + nick + "\", image : \"http://www.digibuzzme.com/wp-content/uploads/2012/11/error-404-road-not-found.jpg\" }"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -146,11 +149,11 @@ public class JudgeAuctionsActivity extends FragmentActivity {
     }
 
     public void onNoClick(View view) {
-        scrollRight();
+        click();
     }
 
     private void click() {
-        if (mPager.getCurrentItem() == NUM_PAGES) {
+        if (mPager.getCurrentItem() == NUM_PAGES - 1) {
             mSocket.emit("result", preferencesMask);
         } else {
             scrollRight();

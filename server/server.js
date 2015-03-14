@@ -48,16 +48,16 @@ io.on('connection', function (socket) {
         else {
             var match = ~(results[0] ^ results[1]) & (Math.pow(2, config.auctions) - 1);
             for (var i = 0; i < users.length; i++) {
-                if(match > 0) {
+                //if(match > 0) {
                     users[i].emit("finish", {
-                        matched: true,
+                        matched: match > 0,
                         username: usernames[1-i],
                         //image: images[1-i]
                         image: imgs[1-i]
                     });
-                } else {
-                    users[i].emit("finish", {matched: false});
-                }
+                //} else {
+                //    users[i].emit("finish", {matched: false});
+                //}
             }
             users = [];
             results = [];

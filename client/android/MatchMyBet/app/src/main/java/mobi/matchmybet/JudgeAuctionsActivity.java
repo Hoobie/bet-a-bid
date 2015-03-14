@@ -1,19 +1,15 @@
 package mobi.matchmybet;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.HorizontalScrollView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
@@ -23,43 +19,47 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 
 import mobi.matchmybet.model.Auction;
 
 
-public class JudgeAuctionsActivity extends Activity {
+public class JudgeAuctionsActivity extends FragmentActivity {
 
     private ArrayList<Auction> auctions = new ArrayList<>();
-    private ArrayList<ImageView> imageViews = new ArrayList<>();
     private String nick;
     private Socket mSocket;
+
     {
         try {
-            mSocket = IO.socket("http://10.0.2.58:6666");
+            mSocket = IO.socket("http://10.0.2.58:8000");
         } catch (URISyntaxException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private HorizontalScrollView scrollView;
-    private int auctionCounter = 0;
+    /**
+     * The number of pages (wizard steps) to show in this demo.
+     */
+    private static final int NUM_PAGES = 5;
+
+    /**
+     * The pager widget, which handles animation and allows swiping horizontally to access previous
+     * and next wizard steps.
+     */
+    private ViewPager mPager;
+
+    /**
+     * The pager adapter, which provides the pages to the view pager widget.
+     */
+    private PagerAdapter mPagerAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_judge_auctions);
-        scrollView = (HorizontalScrollView) findViewById(R.id.horizontalScrollView);
-        scrollView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return true; // disable scrolling
-            }
-        });
         Intent i = getIntent();
         nick = i.getStringExtra(MainActivity.EXTRA_NICK);
         mSocket.connect();
@@ -67,6 +67,40 @@ public class JudgeAuctionsActivity extends Activity {
         mSocket.emit("join", nick);
     }
 
+    @Override
+    public void onBackPressed() {
+        if (mPager.getCurrentItem() == 0) {
+            // If the user is currently looking at the first step, allow the system to handle the
+            // Back button. This calls finish() on this activity and pops the back stack.
+            super.onBackPressed();
+        } else {
+            // Otherwise, select the previous step.
+            mPager.setCurrentItem(mPager.getCurrentItem() - 1);
+        }
+    }
+
+    /**
+     * A simple pager adapter that represents 5 ScreenSlidePageFragment objects, in
+     * sequence.
+     */
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+        public ScreenSlidePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            Auction auction = auctions.get(position);
+            return ScreenSlidePageFragment.getInstance(auction.getTitle(), auction.getUrl());
+        }
+
+        @Override
+        public int getCount() {
+            return NUM_PAGES;
+        }
+    }
+
+    private ZoomOutPageTransformer zoomOutPageTransformer;
     private Emitter.Listener onPaired = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
@@ -78,18 +112,29 @@ public class JudgeAuctionsActivity extends Activity {
                     String title, url;
 
                     try {
-                        JSONArray jsonAuctions = (JSONArray) data.getJSONArray("auctions");
+                        JSONArray jsonAuctions = data.getJSONArray("auctions");
                         for (int i = 0; i < jsonAuctions.length(); i++) {
                             auctionJSON = jsonAuctions.getJSONObject(i);
                             title = auctionJSON.getString("title");
                             url = auctionJSON.getString("image");
                             auctions.add(new Auction(title, url));
                         }
-                    } catch (JSONException e) {
-                        return;
-                    }
 
-                    showAuctionsData(auctions);
+                        // Instantiate a ViewPager and a PagerAdapter.
+                        mPager = (ViewPager) findViewById(R.id.viewPager);
+                        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+                        mPager.setAdapter(mPagerAdapter);
+                        zoomOutPageTransformer = new ZoomOutPageTransformer();
+                        mPager.setPageTransformer(true, zoomOutPageTransformer);
+                        mPager.setHorizontalScrollBarEnabled(false);
+                        mPager.setOnTouchListener(new View.OnTouchListener() {
+                            @Override
+                            public boolean onTouch(View v, MotionEvent event) {
+                                return true; // disable swipe
+                            }
+                        });
+                    } catch (JSONException e) {
+                    }
                 }
             });
         }
@@ -104,54 +149,8 @@ public class JudgeAuctionsActivity extends Activity {
     }
 
     public void scrollRight() {
-        scrollView.scrollTo(300 * ++auctionCounter, 0);
+        mPager.setCurrentItem(mPager.getCurrentItem() + 1);
     }
-
-    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-        ImageView imageView;
-
-        public DownloadImageTask(ImageView imageView) {
-            this.imageView = imageView;
-        }
-
-        protected Bitmap doInBackground(String... urls) {
-            String url = urls[0];
-            Bitmap bitmap = null;
-            try {
-                bitmap = BitmapFactory.decodeStream((InputStream) new URL(url).openStream());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return bitmap;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            imageView.setImageBitmap(result);
-            imageView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        }
-    }
-
-    private void showAuctionsData(ArrayList<Auction> auctions) {
-        LinearLayout auctionsLayout = (LinearLayout)findViewById(R.id.auctionsLayout);
-
-        for (Auction auction : auctions) {
-            LinearLayout insideLayout = new LinearLayout(getApplicationContext());
-            insideLayout.setOrientation(LinearLayout.VERTICAL);
-            insideLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            TextView titleView = new TextView(getApplicationContext());
-            titleView.setTextColor(Color.BLACK);
-            titleView.setText(auction.getTitle());
-            insideLayout.addView(titleView);
-            ImageView imageView = new ImageView(getApplicationContext());
-            new DownloadImageTask(imageView).execute(auction.getUrl());
-            insideLayout.addView(imageView);
-            imageViews.add(imageView);
-            auctionsLayout.addView(insideLayout);
-        }
-    }
-
-
 
     @Override
     public void onDestroy() {

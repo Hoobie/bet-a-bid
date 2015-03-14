@@ -21,7 +21,7 @@ function getAuctions(cb) {
         rest.get(config.apis.allegro.endpoint + "v1/allegro/bargains", {
             query: {
                 access_token: token,
-                limit: 5,
+                limit: config.auctions,
                 dailyOffers: false
             }
         }).on('complete', function (data, result) {
@@ -44,7 +44,3 @@ function getAuctions(cb) {
 }
 
 module.exports.getAuctions = getAuctions;
-
-//getAuctions(function (a) {
-//    console.log(a);
-//});

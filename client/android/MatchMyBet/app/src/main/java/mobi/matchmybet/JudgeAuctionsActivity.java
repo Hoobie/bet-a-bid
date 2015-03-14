@@ -29,8 +29,8 @@ public class JudgeAuctionsActivity extends FragmentActivity {
 
     private ArrayList<Auction> auctions = new ArrayList<>();
     private String nick;
+    private int preferencesMask;
     private Socket mSocket;
-
     {
         try {
             mSocket = IO.socket("http://10.0.2.58:8000");
@@ -64,7 +64,7 @@ public class JudgeAuctionsActivity extends FragmentActivity {
         nick = i.getStringExtra(MainActivity.EXTRA_NICK);
         mSocket.connect();
         mSocket.on("paired", onPaired);
-        mSocket.emit("join", nick);
+        mSocket.emit("join", "{ \"name\" : \"" + nick + "\", \"image\" : \"http://www.digibuzzme.com/wp-content/uploads/2012/11/error-404-road-not-found.jpg\" }");
     }
 
     @Override
@@ -141,11 +141,20 @@ public class JudgeAuctionsActivity extends FragmentActivity {
     };
 
     public void onYesClick(View view) {
-        scrollRight();
+        preferencesMask += 1 << mPager.getCurrentItem();
+        click();
     }
 
     public void onNoClick(View view) {
         scrollRight();
+    }
+
+    private void click() {
+        if (mPager.getCurrentItem() == NUM_PAGES) {
+            mSocket.emit("result", preferencesMask);
+        } else {
+            scrollRight();
+        }
     }
 
     public void scrollRight() {
@@ -157,6 +166,7 @@ public class JudgeAuctionsActivity extends FragmentActivity {
         super.onDestroy();
 
         mSocket.off("paired", onPaired);
+        //mSocket.emit("disconnect");
         mSocket.disconnect();
     }
 }

@@ -19,10 +19,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PairFoundActivity"
-            android:label="@string/title_activity_pair_found" >
-        </activity>
-        <activity
             android:name=".JudgeAuctionsActivity"
             android:label="@string/title_activity_judge_auctions" >
         </activity>

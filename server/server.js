@@ -8,6 +8,8 @@ var config = require("./config.json"),
     allegro = require("./allegro.js");
 
 var users = [], results = [], usernames = [], images = [], state = 0;
+var imgs = ["http://www.dannyst.com/blogimg/5-sec-faces-photo-12.jpg",
+            "http://defwalls.com/wallpapers-n/men-people-actors-Daniel-Craig-faces-_4819-38.jpg"];
 
 console.log("Server started");
 
@@ -44,14 +46,14 @@ io.on('connection', function (socket) {
         if (state == 3)
             state = 4;
         else {
-            var match = ~(results[0] ^ results[1]) & (Math.pow(config.auctions) - 1);
-        //var match = 2;
+            var match = ~(results[0] ^ results[1]) & (Math.pow(2, config.auctions) - 1);
             for (var i = 0; i < users.length; i++) {
                 if(match > 0) {
                     users[i].emit("finish", {
                         matched: true,
                         username: usernames[1-i],
-                        image: images[1-i]
+                        //image: images[1-i]
+                        image: imgs[1-i]
                     });
                 } else {
                     users[i].emit("finish", {matched: false});

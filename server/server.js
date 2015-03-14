@@ -44,7 +44,7 @@ io.on('connection', function (socket) {
         if (state == 3)
             state = 4;
         else {
-            var match = ~(results[0] ^ results[1]) & 0x31;
+            var match = ~(results[0] ^ results[1]) & (Math.pow(config.auctions) - 1);
         //var match = 2;
             for (var i = 0; i < users.length; i++) {
                 if(match > 0) {

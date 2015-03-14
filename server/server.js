@@ -7,7 +7,7 @@ var config = require("./config.json"),
     io = require("socket.io")(config.port),
     allegro = require("./allegro.js");
 
-var users = [], results = [], usernames = [], state = 0;
+var users = [], results = [], usernames = [], images = [], state = 0;
 
 console.log("Server started");
 
@@ -15,9 +15,11 @@ io.on('connection', function (socket) {
     var username = "";
 
     socket.on("join", function (data) {
-        username = data || "Guest";
+        username = data.name || "Guest";
+        var image = data.image || "";
         console.log(username + " joined the server");
         usernames.push(username);
+        images.push(image);
         if (state == 0) {
             users.push(socket);
             state = 1;
@@ -48,7 +50,8 @@ io.on('connection', function (socket) {
                 if(match > 0) {
                     users[i].emit("finish", {
                         matched: true,
-                        username: usernames[1-i]
+                        username: usernames[1-i],
+                        image: images[1-i]
                     });
                 } else {
                     users[i].emit("finish", {matched: false});
@@ -56,6 +59,8 @@ io.on('connection', function (socket) {
             }
             users = [];
             results = [];
+            images = [];
+            usernames = [];
             state = 0;
         }
     });
